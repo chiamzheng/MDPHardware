@@ -124,7 +124,7 @@ int totalRightEncoder=0;
 uint8_t buff[20];
 
 //PID variables
-float Kp=3, Ki=0, Kd=0.00;
+float Kp=6, Ki=1, Kd=0.01;
 float T=5; /*Sample Period*/
 float ruk, ruk_1=0, rek_1=0, rek_2=0, rek=0;
 float luk, luk_1=0, lek_1=0, lek_2=0, lek=0;
@@ -1622,6 +1622,7 @@ void robotCommand(void const * argument)
 								moveForwardIndefinitely();
 							}
 							else{
+								printf("FW reached");
 								HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
 															HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
 															HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
@@ -1720,12 +1721,13 @@ void robotCommand(void const * argument)
 		}
 		else if (strncmp(motorDir, "RS", 2) == 0){
 					//moveBackward("Right", angle);
+			printf("RS reached");
 						gyroInit();
 						osDelay(10);
 												//printf("YOLO");
-												htim1.Instance->CCR4 = 145;
-												osDelay(1000);
-											HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
+						htim1.Instance->CCR4 = 145;
+						osDelay(10);					//osDelay(1000);
+						HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 				}
 
