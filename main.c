@@ -1122,9 +1122,9 @@ void moveLBackward(char dir[2], int target_angle) {
     // Set PWM values for both wheels (reverse direction)
     __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1700);  // Left wheel (adjust for reverse)
     __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2000);  // Right wheel
-    while(total_angle  <= target_angle){
-       		osDelay(10);
-       		}
+    while(total_angle*-1  <= target_angle){
+    		osDelay(10);
+    		}
 
 
 
@@ -1137,6 +1137,7 @@ void moveLBackward(char dir[2], int target_angle) {
     }*/
 
     stopMovement();  // Stop the movement after reaching the desired distance
+    htim1.Instance->CCR4 = 145;
 
     // Reset motorDir to "ST" after movement stops
 }
@@ -1166,6 +1167,7 @@ void moveRBackward(char dir[2], int target_angle) {
 
 
     stopMovement();  // Stop the movement after reaching the desired distance
+    htim1.Instance->CCR4 = 145;
 
     // Reset motorDir to "ST" after movement stops
 }
@@ -1664,9 +1666,9 @@ void robotCommand(void const * argument)
 							gyroInit();
 							osDelay(1000);
 
-							motorLeft(90);
+							//motorLeft(90);
 
-							//motorLeft(angle);
+							motorLeft(angle);
 							osDelay(1);
 							/*moveBackward("Straight", 10);
 							osDelay(1);
@@ -1684,9 +1686,9 @@ void robotCommand(void const * argument)
 							gyroInit();
 							osDelay(1000);
 
-							//motorRight(angle);
+							motorRight(angle);
 
-							motorRight(90);
+							//motorRight(90);
 							osDelay(1);
 							//moveBackward("Straight", 20);
 							//osDelay(1);
@@ -1703,7 +1705,7 @@ void robotCommand(void const * argument)
 
 										//motorLeft(angle);
 
-			moveLBackward("Lf", 90);
+			moveLBackward("Lf", angle);
 			osDelay(1);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
@@ -1711,7 +1713,7 @@ void robotCommand(void const * argument)
 			Aint = 0;
 			gyroInit();
 			osDelay(1000);
-			moveRBackward("Rt", 90);
+			moveRBackward("Rt", angle);
 			osDelay(1);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
