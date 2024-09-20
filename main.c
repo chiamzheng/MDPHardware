@@ -124,7 +124,7 @@ int totalRightEncoder=0;
 uint8_t buff[20];
 
 //PID variables
-float Kp=6, Ki=1, Kd=0.01;
+float Kp=6, Ki=0.01, Kd=0.01;
 float T=5; /*Sample Period*/
 float ruk, ruk_1=0, rek_1=0, rek_2=0, rek=0;
 float luk, luk_1=0, lek_1=0, lek_2=0, lek=0;
@@ -157,10 +157,28 @@ void writeByte(uint8_t addr, uint8_t data){
 	buff[1] = data;
 	HAL_I2C_Master_Transmit(&hi2c1, ICMAddr << 1, buff, 2, 20);
 }
+//this one new i add in 19sept onli: lowpassfilter to reduce angle overcompensation
+
+double applyLowPassFilter(double current_angle, double new_measurement, double alpha) {
+    return alpha * new_measurement + (1 - alpha) * current_angle;
+}
 
 void correctDirection(double target_angle, int dir){
-
 	int pidVal;
+	    double alpha = 0.9; // Filter coefficient for smoothing
+
+	    // Apply low-pass filter to smooth the total angle value
+	    total_angle = applyLowPassFilter(total_angle, total_angle, alpha);
+
+	    // Calculate PID value for steering
+	    pidVal = (int)(150 + (dir * (total_angle - target_angle) * 2.0 + 0.0008 * Aint));
+	    if (pidVal <= 100) pidVal = 100;
+	    if (pidVal >= 200) pidVal = 200;
+
+	    Aint += dir * (total_angle - target_angle);
+	    htim1.Instance->CCR4 = pidVal;
+
+	/*int pidVal;
 
 	// calibrate these for PID and gyro
 	pidVal = (int)(150 + (dir*(total_angle - target_angle)*2.0 + 0.0008*Aint));
@@ -174,7 +192,7 @@ void correctDirection(double target_angle, int dir){
 	Aint += dir*(total_angle - target_angle);
 //	htim1.Instance -> CCR4 = 150;
 //	osDelayUntil(10);
-	htim1.Instance -> CCR4 = pidVal;
+	htim1.Instance -> CCR4 = pidVal;*/
 
 }
 
