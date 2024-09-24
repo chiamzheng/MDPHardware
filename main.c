@@ -289,11 +289,11 @@ int main(void)
   robotCommandTasHandle = osThreadCreate(osThread(robotCommandTas), NULL);
 
   /* definition and creation of leftEncoderTask */
-  osThreadDef(leftEncoderTask, leftEncoder, osPriorityIdle, 0, 128);
+  osThreadDef(leftEncoderTask, leftEncoder, osPriorityIdle, 0, 128*2);
   leftEncoderTaskHandle = osThreadCreate(osThread(leftEncoderTask), NULL);
 
   /* definition and creation of rightEncoderTas */
-  osThreadDef(rightEncoderTas, rightEncoder, osPriorityIdle, 0, 128);
+  osThreadDef(rightEncoderTas, rightEncoder, osPriorityIdle, 0, 128*2);
   rightEncoderTasHandle = osThreadCreate(osThread(rightEncoderTas), NULL);
 
   /* definition and creation of stopBotTask */
@@ -305,11 +305,11 @@ int main(void)
   motorTaskHandle = osThreadCreate(osThread(motorTask), NULL);
 
   /* definition and creation of OLEDTask */
-  osThreadDef(OLEDTask, OLEDShow, osPriorityIdle, 0, 128);
+  osThreadDef(OLEDTask, OLEDShow, osPriorityIdle, 0, 128*2);
   OLEDTaskHandle = osThreadCreate(osThread(OLEDTask), NULL);
 
   /* definition and creation of gyroTask */
-  osThreadDef(gyroTask, gyroTask1, osPriorityIdle, 0, 128);
+  osThreadDef(gyroTask, gyroTask1, osPriorityIdle, 0, 128*2);
   gyroTaskHandle = osThreadCreate(osThread(gyroTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -1659,7 +1659,7 @@ void robotCommand(void const * argument)
 															__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2000); //right wheel was 1400
 
 															turnDegree = 0;
-															moveForward("Straight", angle);
+															moveForward("Straight", angle-5);
 
 							}
 							osDelay(2000);
@@ -1674,7 +1674,7 @@ void robotCommand(void const * argument)
 							Aint = 0;
 							gyroInit();
 
-							moveBackward("Straight", angle);
+							moveBackward("Straight", angle-6);
 							}
 							osDelay(2000);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
@@ -1710,7 +1710,7 @@ void robotCommand(void const * argument)
 							gyroInit();
 							osDelay(200);
 
-							motorRight(angle-5);
+							motorRight(angle-4);// inside lab
 
 							//motorRight(90);
 
@@ -1729,11 +1729,11 @@ void robotCommand(void const * argument)
 
 
 										//motorLeft(angle);
-			moveBackward("Straight", 6);
+			moveBackward("Straight", 4);//in lab
 			osDelay(1);
 			moveLBackward("Lf", angle-5);
 			osDelay(1);
-			moveBackward("Straight", 4);
+			moveBackward("Straight", 3);//in lab
 			osDelay(2000);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
@@ -1741,7 +1741,9 @@ void robotCommand(void const * argument)
 			Aint = 0;
 			gyroInit();
 			osDelay(200);
-			moveRBackward("Rt", angle-5);
+			moveBackward("Straight", 1);//for lab
+			osDelay(200);
+			moveRBackward("Rt", angle-2);// for lab
 			osDelay(2000);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
