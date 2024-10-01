@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -122,7 +123,7 @@ int angle = 90;
 int totalLeftEncoder=0;
 int totalRightEncoder=0;
 uint8_t buff[20];
-
+int delayOS = 500; // in milisec
 //PID variables
 float Kp=6, Ki=0.01, Kd=0.01;
 float T=5; /*Sample Period*/
@@ -165,10 +166,10 @@ double applyLowPassFilter(double current_angle, double new_measurement, double a
 
 void correctDirection(double target_angle, int dir){
 	int pidVal;
-	    double alpha = 0.9; // Filter coefficient for smoothing
+	    //double alpha = 0.9; // Filter coefficient for smoothing
 
 	    // Apply low-pass filter to smooth the total angle value
-	    total_angle = applyLowPassFilter(total_angle, total_angle, alpha);
+
 
 	    // Calculate PID value for steering
 	    pidVal = (int)(150 + (dir * (total_angle - target_angle) * 2.0 + 0.0008 * Aint));
@@ -258,6 +259,7 @@ int main(void)
   MX_TIM4_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
+  //Accel_Init(); // this is for accelerometer
   /* USER CODE BEGIN 2 */
   OLED_Init();
   HAL_UART_Receive_IT(&huart3,(uint8_t *) aRxBuffer, 4);
@@ -1662,7 +1664,7 @@ void robotCommand(void const * argument)
 															moveForward("Straight", angle-5);
 
 							}
-							osDelay(2000);
+							osDelay(delayOS);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 
@@ -1676,7 +1678,7 @@ void robotCommand(void const * argument)
 
 							moveBackward("Straight", angle-6);
 							}
-							osDelay(2000);
+							osDelay(delayOS);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "FL", 2) == 0){
 							if(angle==99){
@@ -1699,7 +1701,7 @@ void robotCommand(void const * argument)
 							moveBackward("Straight", 10);
 							*/
 							}
-							osDelay(2000);
+							osDelay(delayOS);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "FR", 2) == 0){
 							if(angle==99){
@@ -1709,7 +1711,7 @@ void robotCommand(void const * argument)
 							Aint = 0;
 							gyroInit();
 							osDelay(200);
-
+							moveBackward("Straight", 3);//in lab
 							motorRight(angle-4);// inside lab
 
 							//motorRight(90);
@@ -1719,7 +1721,7 @@ void robotCommand(void const * argument)
 							//motorRight(10);
 							//moveBackward("Straight", 10);
 							}
-							osDelay(2000);
+							osDelay(delayOS);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "BL", 2) == 0){
 										Aint = 0;
@@ -1734,7 +1736,7 @@ void robotCommand(void const * argument)
 			moveLBackward("Lf", angle-5);
 			osDelay(1);
 			moveBackward("Straight", 3);//in lab
-			osDelay(2000);
+			osDelay(delayOS);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 		}else if (strncmp(motorDir, "BR", 2) == 0){
@@ -1744,7 +1746,7 @@ void robotCommand(void const * argument)
 			moveBackward("Straight", 1);//for lab
 			osDelay(200);
 			moveRBackward("Rt", angle-2);// for lab
-			osDelay(2000);
+			osDelay(delayOS);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 		}
@@ -1755,7 +1757,7 @@ void robotCommand(void const * argument)
 						osDelay(10);
 												//printf("YOLO");
 						htim1.Instance->CCR4 = 150;
-						osDelay(2000);					//osDelay(1000);
+						osDelay(delayOS);					//osDelay(1000);
 						HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 				}
@@ -1766,7 +1768,7 @@ void robotCommand(void const * argument)
 										stopBot();
 
 										break;
-		}*/
+		}*/\
 		/*
 		switch(motorDir){
 			case 20:
@@ -2337,7 +2339,7 @@ void gyroTask1(void const * argument)
   /* USER CODE BEGIN gyroTask1 */
   /* Infinite loop */
 	uint8_t val[2] = {0,0};
-
+		double alpha = 0.9;
 		char hello[20];
 		int16_t angular_speed = 0;
 
@@ -2370,8 +2372,14 @@ void gyroTask1(void const * argument)
 
 		  // for gyro drift removal, calibration needs to be added to angular speed
 		  total_angle +=(double)(angular_speed - 1.7)*((HAL_GetTick() - tick)/16400.0);
+		  // Calculate new (unfiltered) angle increment
+		 // double new_angle_increment = (double)(angular_speed - 1.7) * ((HAL_GetTick() - tick) / 16400.0);
 
+		              // Apply the low-pass filter to the new angle increment
+		             // double filtered_increment = applyLowPassFilter(0, new_angle_increment, alpha); // Initialize previous value as 0 for the first run
 
+		              // Update total angle with the filtered increment
+		             // total_angle += filtered_increment;
 		  //prevSpeed = angular_speed;
 		  if(total_angle >= 720){
 			  total_angle = 0;
