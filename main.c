@@ -173,9 +173,10 @@ void correctDirection(double target_angle, int dir){
 
 
 	    // Calculate PID value for steering
-	    pidVal = (int)(150 + (dir * (total_angle - target_angle) * 2.0 + 0.0008 * Aint));
+	pidVal = (int)(149 + (dir * (total_angle - target_angle) * 3.0 + 0.0008 * Aint));
+
 	    if (pidVal <= 100) pidVal = 100;
-	    if (pidVal >= 200) pidVal = 200;
+	    if (pidVal >= 266) pidVal = 266;
 
 	    Aint += dir * (total_angle - target_angle);
 	    htim1.Instance->CCR4 = pidVal;
@@ -195,6 +196,24 @@ void correctDirection(double target_angle, int dir){
 //	htim1.Instance -> CCR4 = 150;
 //	osDelayUntil(10);
 	htim1.Instance -> CCR4 = pidVal;*/
+
+}
+void correctDirectionO(double target_angle, int dir){
+	int pidVal;
+	    //double alpha = 0.9; // Filter coefficient for smoothing
+
+	    // Apply low-pass filter to smooth the total angle value
+
+
+	    // Calculate PID value for steering
+	pidVal = (int)(149 + (dir * (total_angle - target_angle) * 2.0 + 0.0008 * Aint));
+
+	    if (pidVal <= 100) pidVal = 100;
+	    if (pidVal >= 266) pidVal = 266;
+
+	    Aint += dir * (total_angle - target_angle);
+	    htim1.Instance->CCR4 = pidVal;
+
 
 }
 
@@ -1080,7 +1099,7 @@ void moveBackward(char dir[10], int distance) {
         currentDistance = (totalLeftEncoder) / 1550.0 * -21.04;  // Negative for backward motion
 
         // Use PID to correct direction if necessary (if you have PID logic)
-         //correctDirection(0, -1);  // Correct direction using PID (optional)
+         correctDirection(0, -1);  // Correct direction using PID (optional)
         osDelay(10);  // Small delay for stability
     }
 
@@ -1141,7 +1160,8 @@ void moveForward(char dir[10], int distance){
     int slowDownDistance = (int)(0.60 * distance);  // 70% of distance to start ramp-down
 
     int currentPWM = 1500;
-    int rampStep = currentPWM / 50;
+
+    int rampStep = currentPWM / 500;
     double currentDistance = 0.0;
     double prevDistance = 0.0;
 
@@ -1156,7 +1176,9 @@ void moveForward(char dir[10], int distance){
 
         currentDistance = (totalRightEncoder + totalLeftEncoder) / 3100.0 * 21.04; // Average both encoders
         prevDistance = currentDistance;
-        osDelay(1);  // Faster control loop for smoother ramp-up
+        correctDirection(0, 1);
+        osDelay(10);  // Faster control loop for smoother ramp-up
+
     }
 
     // Maintain target speed until slow-down distance
@@ -1169,25 +1191,28 @@ void moveForward(char dir[10], int distance){
     }
 
     // Smooth ramp-down as we approach the target distance
-    while (currentDistance < distance) {
-        currentDistance = (totalRightEncoder + totalLeftEncoder) / 3100.0 * 21.04;  // Average both encoders
+    /*while (currentDistance < distance) {
+            currentDistance = (totalRightEncoder + totalLeftEncoder) / 3100.0 * 21.04;  // Average both encoders
 
-        // Decrease motor speeds gradually
-        currentPWM -= rampStep;
-        if (currentPWM < 0) currentPWM = 0;  // Ensure PWM does not go below 0
+            // Decrease motor speeds gradually
+            currentPWM -= rampStep;
+            if (currentPWM < 0) currentPWM = 0;  // Ensure PWM does not go below 0
 
-        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, currentPWM);  // Left motor
-        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, currentPWM);  // Right motor
+            __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, currentPWM);  // Left motor
+            __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, currentPWM);  // Right motor
 
-        // Stop if we've reached or exceeded the target distance
-        if (currentDistance >= distance) {
-            stopMovement();
-            break;
-        }
-        osDelay(10);  // Small delay for fine control
-    }
+            // Stop if we've reached or exceeded the target distance
+            if (currentDistance >= distance) {
+                stopMovement();  // Ensure the robot stops at the end
+                break;
+            }
+            correctDirection(0, 1);  // Correct direction using PID
 
-    stopMovement();  // Ensure robot stops at the end
+            osDelay(10);  // Small delay for fine control
+	}
+    */
+
+        stopMovement();  // Ensure the robot stops at the end
 }
 
 void moveForwardO(char dir[10], int distance){
@@ -1332,7 +1357,7 @@ void moveLBackward(char dir[2], int target_angle) {
 
     // Set PWM values for both wheels (reverse direction)
     __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 500);  // Left wheel (adjust for reverse)
-    __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 4000);  // Right wheel
+    __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000);  // Right wheel
     while(total_angle*-1  <= target_angle){
     		osDelay(10);
     		}
@@ -1370,7 +1395,7 @@ void moveRBackward(char dir[2], int target_angle) {
     HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
 
     // Set PWM values for both wheels (reverse direction)
-    __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 5000);  // Left wheel (adjust for reverse)
+    __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 3000);  // Left wheel (adjust for reverse)
     __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 500);  // Right wheel
     while(total_angle  <= target_angle){
     		osDelay(10);
@@ -1404,7 +1429,7 @@ void motorRight(int target_angle){
 
 	osDelay(250);
 
-	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1,	4000); //motor A; 1000 at 14 oct 245am
+	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1,	3000); //motor A; 1000 at 14 oct 245am
 	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 500); //motor B;
 
 	osDelay(10);
@@ -1464,7 +1489,7 @@ void motorLeft(int target_angle){
 	osDelay(250);
 
 	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 500); //motor A
-	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 4000); //motor B; 1000 at 14 oct 245am
+	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000); //motor B; 1000 at 14 oct 245am
 
 	osDelay(10);
 	while(total_angle  <= target_angle){
@@ -1713,30 +1738,167 @@ void motorReverse(int pwm){
 
 }
 
-void moveForwardIndefinitely(void)
+void moveForwardIndefinitely(int instruct)
 {
-	HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
+	int dis=0;
+	int dis1=0;
+	if(instruct==99){
+		dis=40;
+		dis1=20;
+	}
+	else{
+		dis=50;
+		dis1=30;
+	}
+	htim1.Instance->CCR4 = 149;
+	osDelay(100);
+
 
 	// Set PWM to move both motors forward
-	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2000);  // Adjust this value as per speed
-	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2000);  // Adjust this value as per speed
+
+	if(Distance>dis){
+		HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
+			osDelay(10);
+			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 3000);  // Adjust this value as per speed
+			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000);  // Adjust this value as per speed
+		while(Distance > dis){
+								//correctDirection(0, 1);
+
+				correctDirection(0, 1);  // Correct direction using PID
+				osDelay(10);
+		}
+		rampDownMotors(3000);
+	}
+	else if(Distance<dis1){
+		HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
+			osDelay(10);
+			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
+			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+			while(Distance<dis1){
+				correctDirection(0, -1);  // Correct direction using PID
+				osDelay(10);
+			}
+			rampDownMotors(1500);
+	}
+
 }
 
 void moveBackwardIndefinitely(void)
 {
-	HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
+	htim1.Instance->CCR4 = 149;
+		osDelay(100);
 
-	// Set PWM to move both motors backward
-	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2000);  // Adjust this value as per speed
-	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2000);  // Adjust this value as per speed
+
+		// Set PWM to move both motors forward
+		if(41826*(1/(double)leftIR[0]) - 10.03 < 60){
+			HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
+				osDelay(10);
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+				while(41826*(1/(double)leftIR[0]) - 10.03 < 60){
+					correctDirectionO(0, 1);  // Correct direction using PID
+					osDelay(10);
+				}
+				rampDownMotors(1500);
+		}
+		if(41826*(1/(double)leftIR[0]) - 10.03 >60){
+			HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
+						osDelay(10);
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+						while(41826*(1/(double)leftIR[0]) - 10.03 > 60){
+							correctDirectionO(0, 1);  // Correct direction using PID
+							osDelay(10);
+						}
+						rampDownMotors(1500);
+				}
+
 }
 
+void rightWallCheck(void){
+	htim1.Instance->CCR4 = 149;
+		osDelay(100);
+
+
+		// Set PWM to move both motors forward
+		if(41826*(1/(double)leftIR[0]) - 10.03 < 1500){ // move backwards
+			HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
+				osDelay(10);
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+				while(41826*(1/(double)leftIR[0]) - 10.03 < 60){
+					correctDirectionO(0, -1);  // Correct direction using PID
+					osDelay(10);
+				}
+				rampDownMotors(1500);
+		}
+		if(41826*(1/(double)leftIR[0]) - 10.03 >1500){ //move forwards
+			HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
+						osDelay(10);
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+						while(41826*(1/(double)leftIR[0]) - 10.03 > 60){
+							correctDirectionO(0, 1);  // Correct direction using PID
+							osDelay(10);
+						}
+						rampDownMotors(1500);
+				}
+
+}
+void leftWallCheck(void){
+	htim1.Instance->CCR4 = 149;
+		osDelay(100);
+
+
+		// Set PWM to move both motors forward
+		if(37411*(1/(double)rightIR[0]) - 8.57 < 1500){ //move backwards
+			HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
+				osDelay(10);
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+				while(37411*(1/(double)rightIR[0]) - 8.57 < 60){
+					correctDirectionO(0, -1);  // Correct direction using PID
+					osDelay(10);
+				}
+				rampDownMotors(1500);
+		}
+		if(37411*(1/(double)rightIR[0]) - 8.57 > 1500){
+			HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
+						osDelay(10);
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+						while(37411*(1/(double)rightIR[0]) - 8.57 < 60){
+							correctDirectionO(0, 1);  // Correct direction using PID
+							osDelay(10);
+						}
+						rampDownMotors(1500);
+				}
+
+}
 void turnLeftIndefinitely(void)
 {
 	HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET); // Left motor backward
@@ -1784,7 +1946,7 @@ void StartDefaultTask(void const * argument)
   for(;;)
   {
 	  ultrasonic_read();
-	  osDelay(1000);
+	  osDelay(50);
   }
   /* USER CODE END 5 */
 }
@@ -1824,14 +1986,25 @@ void robotCommand(void const * argument)
 
 	for(;;){
 		target_angle = 0;
+
 		if (strncmp(motorDir, "ST", 2) == 0){
 			stopMovement();
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 		}else if (strncmp(motorDir, "FW", 2) == 0){
+							total_angle=0;
 							if(angle==99){
-								moveForwardIndefinitely();
+								Aint = 0;
+								gyroInit();
+								moveForwardIndefinitely(99);
+								//
 							}
+							else if(angle==98){
+															Aint = 0;
+															gyroInit();
+															moveForwardIndefinitely(98);
+															//
+														}
 							else{
 								printf("FW reached");
 								HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
@@ -1849,31 +2022,31 @@ void robotCommand(void const * argument)
 								gyroInit();
 								turnDegree = 0;
 								if(angle==10){
-									angle=12;
+									angle=13;
 										}
 									else if(angle==20){
-										angle=21;
+										angle=22;
 									}
 									else if(angle==30){
-										//distance=distance+3;
+										angle=32;
 									}
 									else if(angle==40){
-										angle=38;
+										angle=40;
 										}
 									else if(angle==50){
-										angle=46;
+										angle=48;
 										}
 									else if(angle==60){
-										angle=57;
+										angle=54;
 											}
 									else if(angle==70){
 										angle=67;
 												}
 									else if(angle==80){
-										angle=77;
+										angle=79;
 													}
 									else if(angle==90){
-										angle=87;
+										angle=90;
 													}
 								moveForward("Straight", (angle-5)*0.9);
 
@@ -1883,6 +2056,7 @@ void robotCommand(void const * argument)
 
 
 		}else if (strncmp(motorDir, "BW", 2) == 0){
+			total_angle=0;
 							if(angle==99){
 								moveBackwardIndefinitely();
 										}
@@ -1909,6 +2083,7 @@ void robotCommand(void const * argument)
 							osDelay(delayOS);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "FL", 2) == 0){
+			total_angle=0;
 							if(angle==99){
 								turnLeftIndefinitely();
 													}
@@ -1920,7 +2095,7 @@ void robotCommand(void const * argument)
 							//motorLeft(90);
 							moveForwardO("Straight", 1);
 							osDelay(delayOS);
-							motorLeft(angle-9);
+							motorLeft(angle-6);
 							osDelay(delayOS);
 							moveForwardO("Straight", 5);
 
@@ -1933,6 +2108,7 @@ void robotCommand(void const * argument)
 							osDelay(delayOS);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "FR", 2) == 0){
+			total_angle=0;
 							if(angle==99){
 									turnRightIndefinitely();
 																}
@@ -1942,7 +2118,7 @@ void robotCommand(void const * argument)
 							//osDelay(delayOS);
 							//moveBackward("Straight", 1);//in lab
 							osDelay(delayOS);
-							motorRight(angle-10);// inside lab
+							motorRight(angle-8);// inside lab
 							osDelay(delayOS);
 							moveForwardO("Straight", 4);
 							//motorRight(90);
@@ -1955,6 +2131,7 @@ void robotCommand(void const * argument)
 							osDelay(delayOS);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "BL", 2) == 0){
+			total_angle=0;
 										Aint = 0;
 										gyroInit();
 										osDelay(delayOS);
@@ -1973,24 +2150,128 @@ void robotCommand(void const * argument)
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 		}else if (strncmp(motorDir, "BR", 2) == 0){
+			total_angle=0;
 			Aint = 0;
 			gyroInit();
-			moveBackward("Straight", 4);//in lab
+			//moveBackward("Straight", 4);//in lab
 
 			moveBackward("Straight", 2);//for lab
 			osDelay(delayOS);
-			moveRBackward("Rt", angle-9);// for lab
+			moveRBackward("Rt", angle-4);// for lab
 			osDelay(delayOS);
-			moveBackward("Straight", 2);//for lab
+			//moveBackward("Straight", 1);//for lab
 			//moveForwardO("Straight", 1);
 			osDelay(delayOS);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 
 		}
+		else if (strncmp(motorDir, "SL", 2) == 0){
+			total_angle=0;
+									angle=45;
+									Aint = 0;
+									gyroInit();
+									osDelay(delayOS);
+
+									motorLeft(angle-6);
+									osDelay(delayOS);
+									moveForwardO("Straight", 5);
+									osDelay(delayOS);
+									motorRight(angle-8);
+									osDelay(delayOS);
+									motorRight(angle-8);
+									osDelay(delayOS);
+									moveForwardO("Straight", 3);
+									osDelay(delayOS);
+									motorLeft(angle-6);
+									osDelay(delayOS);
+
+
+									//osDelay(delayOS);
+									HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
+		}
+		else if (strncmp(motorDir, "SR", 2) == 0){
+			total_angle=0;
+											angle=45;
+											Aint = 0;
+											gyroInit();
+											osDelay(delayOS);
+											motorRight(angle-8);
+											osDelay(delayOS);
+											moveForwardO("Straight", 6);
+											osDelay(delayOS);
+											motorLeft(angle-6);
+											osDelay(delayOS);
+											motorLeft(angle-6);
+											osDelay(delayOS);
+											//moveForwardO("Straight", 3);
+											osDelay(delayOS);
+											motorRight(angle-8);
+											osDelay(delayOS);
+
+
+
+											HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
+				}
+		else if (strncmp(motorDir, "LR", 2) == 0){
+					total_angle=0;
+					angle=90;
+					Aint = 0;
+					gyroInit();
+					osDelay(delayOS);
+					motorRight(angle-8);
+					osDelay(delayOS);
+					rightWallCheck();
+					osDelay(delayOS);
+					motorLeft(angle-6);
+					osDelay(delayOS);
+					rightWallCheck();
+					osDelay(delayOS);
+					motorLeft(angle-6);
+					osDelay(delayOS);
+					rightWallCheck();
+					osDelay(delayOS);
+					motorLeft(angle-6);
+					osDelay(delayOS);
+					rightWallCheck();
+					osDelay(delayOS);
+
+
+
+													HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
+						}
+		else if (strncmp(motorDir, "LL", 2) == 0){
+					total_angle=0;
+													angle=90;
+													Aint = 0;
+													gyroInit();
+													osDelay(delayOS);
+													motorLeft(angle-6);
+													osDelay(delayOS);
+													leftWallCheck();
+													osDelay(delayOS);
+													motorRight(angle-8);
+													osDelay(delayOS);
+													leftWallCheck();
+													osDelay(delayOS);
+													motorRight(angle-8);
+													osDelay(delayOS);
+													leftWallCheck();
+													osDelay(delayOS);
+													motorRight(angle-8);
+													osDelay(delayOS);
+													leftWallCheck(); //align with 2nd box
+													osDelay(delayOS);
+
+
+
+
+													HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
+						}
 		else if (strncmp(motorDir, "RS", 2) == 0){
 					//moveBackward("Right", angle);
 			printf("RS reached");
+			total_angle=0;
 						gyroInit();
 						osDelay(10);
 												//printf("YOLO");
