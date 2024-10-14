@@ -346,27 +346,27 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128*2);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of robotCommandTas */
-  osThreadDef(robotCommandTas, robotCommand, osPriorityIdle, 0, 128);
+  osThreadDef(robotCommandTas, robotCommand, osPriorityIdle, 0, 128*3);
   robotCommandTasHandle = osThreadCreate(osThread(robotCommandTas), NULL);
 
   /* definition and creation of leftEncoderTask */
-  osThreadDef(leftEncoderTask, leftEncoder, osPriorityIdle, 0, 128*2);
+  osThreadDef(leftEncoderTask, leftEncoder, osPriorityIdle, 0, 128*3);
   leftEncoderTaskHandle = osThreadCreate(osThread(leftEncoderTask), NULL);
 
   /* definition and creation of rightEncoderTas */
-  osThreadDef(rightEncoderTas, rightEncoder, osPriorityIdle, 0, 128*2);
+  osThreadDef(rightEncoderTas, rightEncoder, osPriorityIdle, 0, 128*3);
   rightEncoderTasHandle = osThreadCreate(osThread(rightEncoderTas), NULL);
 
   /* definition and creation of stopBotTask */
-  osThreadDef(stopBotTask, stopBot, osPriorityIdle, 0, 128);
+  osThreadDef(stopBotTask, stopBot, osPriorityIdle, 0, 128*3);
   stopBotTaskHandle = osThreadCreate(osThread(stopBotTask), NULL);
 
   /* definition and creation of motorTask */
-  osThreadDef(motorTask, motor, osPriorityIdle, 0, 128);
+  osThreadDef(motorTask, motor, osPriorityIdle, 0, 128*2);
   motorTaskHandle = osThreadCreate(osThread(motorTask), NULL);
 
   /* definition and creation of OLEDTask */
@@ -2310,10 +2310,11 @@ void robotCommand(void const * argument)
 							//osDelay(delayOS);
 
 							//motorLeft(90);
-							//moveForwardO("Straight", 1);
-							//osDelay(delayOS);
-							motorLeft(angle-6);
+							moveForward("Straight", 1);
 							osDelay(delayOS);
+							motorLeft(angle-7);
+							osDelay(delayOS);
+							moveForward("Straight", 4);
 							//moveForwardO("Straight", 5);
 
 							/*moveBackward("Straight", 10);
@@ -2334,9 +2335,11 @@ void robotCommand(void const * argument)
 							gyroInit();
 							//osDelay(delayOS);
 							//moveBackward("Straight", 1);//in lab
-							//osDelay(delayOS);
-							motorRight(angle-8);// inside lab
+							moveForward("Straight", 2);
 							osDelay(delayOS);
+							motorRight(angle-6);// inside lab
+							osDelay(delayOS);
+							moveForward("Straight", 6);
 							//moveForwardO("Straight", 4);
 							//motorRight(90);
 							//osDelay(delayOS);
@@ -2356,13 +2359,13 @@ void robotCommand(void const * argument)
 
 
 										//motorLeft(angle);
-			//moveBackward("Straight", 6);//in lab
-			//osDelay(delayOS);
-			moveLBackward("Lf", angle-7);
-			//osDelay(1);
+			moveBackward("Straight", 3);//in lab
+			osDelay(delayOS);
+			moveLBackward("Lf", angle-6);
+			osDelay(delayOS);
 			//moveBackward("Straight", 3);//in lab
 			osDelay(delayOS);
-			//moveBackward("Straight", 1);//in lab
+			moveBackward("Straight", 2);//in lab
 			//osDelay(delayOS);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
@@ -2370,13 +2373,13 @@ void robotCommand(void const * argument)
 			total_angle=0;
 			Aint = 0;
 			gyroInit();
-			//moveBackward("Straight", 4);//in lab
+			moveBackward("Straight", 6);//in lab
 
 			//moveBackward("Straight", 2);//for lab
 			//osDelay(delayOS);
-			moveRBackward("Rt", angle-4);// for lab
+			moveRBackward("Rt", angle-5);// for lab
 			osDelay(delayOS);
-			//moveBackward("Straight", 1);//for lab
+			moveBackward("Straight", 1);//for lab
 			//moveForwardO("Straight", 1);
 			//osDelay(delayOS);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
@@ -2409,27 +2412,27 @@ void robotCommand(void const * argument)
 		}
 		else if (strncmp(motorDir, "SR", 2) == 0){
 			total_angle=0;
-											angle=45;
-											Aint = 0;
-											gyroInit();
-											osDelay(delayOS);
-											motorRight(angle-8);
-											osDelay(delayOS);
-											moveForwardO("Straight", 6);
-											osDelay(delayOS);
-											motorLeft(angle-6);
-											osDelay(delayOS);
-											motorLeft(angle-6);
-											osDelay(delayOS);
-											//moveForwardO("Straight", 3);
-											osDelay(delayOS);
-											motorRight(angle-8);
-											osDelay(delayOS);
+				angle=45;
+				Aint = 0;
+				gyroInit();
+				osDelay(delayOS);
+				motorRight(angle-8);
+				osDelay(delayOS);
+				moveForwardO("Straight", 6);
+				osDelay(delayOS);
+				motorLeft(angle-6);
+				osDelay(delayOS);
+				motorLeft(angle-6);
+				osDelay(delayOS);
+				//moveForwardO("Straight", 3);
+				osDelay(delayOS);
+				motorRight(angle-8);
+				osDelay(delayOS);
 
 
 
-											HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
-				}
+				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
+		}
 		else if (strncmp(motorDir, "LR", 2) == 0){
 					total_angle=0;
 					angle=90;
@@ -2440,7 +2443,9 @@ void robotCommand(void const * argument)
 					osDelay(delayOS);
 					rightWallCheck();
 					osDelay(delayOS);
-					motorLeft(angle-6);
+					motorLeft(174);
+					/*
+
 					osDelay(delayOS);
 					rightWallCheck();
 					osDelay(delayOS);
@@ -2452,38 +2457,42 @@ void robotCommand(void const * argument)
 					osDelay(delayOS);
 					rightWallCheck();
 					osDelay(delayOS);
+					*/
 
 
-
-													HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
+				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 						}
 		else if (strncmp(motorDir, "LL", 2) == 0){
 					total_angle=0;
-													angle=90;
-													Aint = 0;
-													gyroInit();
-													osDelay(delayOS);
-													motorLeft(angle-6);
-													osDelay(delayOS);
-													leftWallCheck();
-													osDelay(delayOS);
-													motorRight(angle-8);
-													osDelay(delayOS);
-													leftWallCheck();
-													osDelay(delayOS);
-													motorRight(angle-8);
-													osDelay(delayOS);
-													leftWallCheck();
-													osDelay(delayOS);
-													motorRight(angle-8);
-													osDelay(delayOS);
-													leftWallCheck(); //align with 2nd box
-													osDelay(delayOS);
+					angle=90;
+					Aint = 0;
+					gyroInit();
+					osDelay(delayOS);
+					motorLeft(angle-6); //LEFT 90
+					osDelay(delayOS);
+					leftWallCheck();
+					osDelay(delayOS);
+					motorRight(172);
+					osDelay(delayOS);
+					leftWallCheck();
+					osDelay(delayOS);
+					motorRight(angle-8);
+					osDelay(delayOS);
+					/*
 
 
 
+					leftWallCheck();
+					osDelay(delayOS);
+					motorRight(angle-8);
+					osDelay(delayOS);
+					leftWallCheck(); //align with 2nd box
+					osDelay(delayOS);
+					*/
 
-													HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
+
+
+				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 						}
 		else if (strncmp(motorDir, "RS", 2) == 0){
 					//moveBackward("Right", angle);
