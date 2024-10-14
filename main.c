@@ -123,7 +123,7 @@ int angle = 90;
 int totalLeftEncoder=0;
 int totalRightEncoder=0;
 uint8_t buff[20];
-int delayOS = 500; // in milisec
+int delayOS = 300; // in milisec
 int motorPower=4000;
 //PID variables
 float Kp=6, Ki=0.01, Kd=0.01;
@@ -202,7 +202,7 @@ void correctDirection(double target_angle, int dir){
 void correctDirection(double target_angle, int dir) {
     // PID coefficients
     double k_p = 3.5;    // Proportional gain
-    double k_i = 0.0008; // Integral gain
+    double k_i = 0.0012; // Integral gain
     double k_d = 0.1;    // Derivative gain
 
     static double previous_error = 0.0;
@@ -225,10 +225,10 @@ void correctDirection(double target_angle, int dir) {
     int pidVal;
     if (dir == 1) {
         // Forward movement
-        pidVal = (int)(149 + (k_p * error + k_i * Aint + k_d * derivative));
+        pidVal = (int)(150 + (k_p * error + k_i * Aint + k_d * derivative));
     } else {
         // Backward movement, reverse correction direction by adjusting around 149
-        pidVal = (int)(149 - (k_p * error + k_i * Aint + k_d * derivative));
+        pidVal = (int)(150 - (k_p * error + k_i * Aint + k_d * derivative));
     }
 
     // Clamp pidVal to the steering range
@@ -249,7 +249,7 @@ void correctDirectionO(double target_angle, int dir){
 
 
 	    // Calculate PID value for steering
-	pidVal = (int)(149 + (dir * (total_angle - target_angle) * 2.0 + 0.0008 * Aint));
+	pidVal = (int)(150 + (dir * (total_angle - target_angle) * 2.0 + 0.0008 * Aint));
 
 	    if (pidVal <= 100) pidVal = 100;
 	    if (pidVal >= 266) pidVal = 266;
@@ -1100,7 +1100,7 @@ void moveBackward(char dir[10], int distance) {
     else if (strcmp(dir, "Right") == 0)
         htim1.Instance->CCR4 = 220;  // Adjust for right turn
     else
-        htim1.Instance->CCR4 = 149;  // Center for straight movement
+        htim1.Instance->CCR4 = 150;  // Center for straight movement
 
     // Set GPIO pins for backward movement
     HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET);  // Reverse Motor A
@@ -1429,7 +1429,7 @@ void moveForwardO(char dir[10], int distance){
 	else if(strcmp(dir, "Right") == 0)
 		htim1.Instance->CCR4 = 220;
 	else
-		htim1.Instance->CCR4 = 149;
+		htim1.Instance->CCR4 = 150;
 
 	HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
@@ -1515,7 +1515,7 @@ void moveBackwardO(char dir[2], int distance) {
     else if (strcmp(dir, "Rt") == 0)
         htim1.Instance->CCR4 = 210;  // Adjust for right
     else
-        htim1.Instance->CCR4 = 149;  // Center for straight movement
+        htim1.Instance->CCR4 = 150;  // Center for straight movement
 
     // Set GPIO pins for backward movement
     HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET);  // Reverse motor A
@@ -1577,7 +1577,7 @@ void moveLBackward(char dir[2], int target_angle) {
     }*/
 
     stopMovement();  // Stop the movement after reaching the desired distance
-    htim1.Instance->CCR4 = 149;
+    htim1.Instance->CCR4 = 150;
 
     // Reset motorDir to "ST" after movement stops
 }
@@ -1607,7 +1607,7 @@ void moveRBackward(char dir[2], int target_angle) {
 
 
     stopMovement();  // Stop the movement after reaching the desired distance
-    htim1.Instance->CCR4 = 149;
+    htim1.Instance->CCR4 = 150;
 
     // Reset motorDir to "ST" after movement stops
 }
@@ -1663,7 +1663,7 @@ void motorRight(int target_angle){
 	}
 	*/
 	stopMovement();
-	htim1.Instance->CCR4 = 149;
+	htim1.Instance->CCR4 = 150;
 	//motorDir = 0;
 	strncpy(motorDir, "ST", sizeof(motorDir) - 1);  // Copy up to 2 characters
 	    motorDir[sizeof(motorDir) - 1] = '\0';  // Ensure null termination
@@ -1722,7 +1722,7 @@ void motorLeft(int target_angle){
 	}
 	*/
 	stopMovement();
-	htim1.Instance->CCR4 = 149;
+	htim1.Instance->CCR4 = 150;
 	//motorDir = 0;
 	strncpy(motorDir, "ST", sizeof(motorDir) - 1);  // Copy up to 2 characters
 	    motorDir[sizeof(motorDir) - 1] = '\0';  // Ensure null termination
@@ -1954,7 +1954,7 @@ void moveForwardIndefinitely(int instruct)
 		dis=50;
 		dis1=30;
 	}
-	htim1.Instance->CCR4 = 149;
+	htim1.Instance->CCR4 = 150;
 	osDelay(100);
 
 
@@ -1995,7 +1995,7 @@ void moveForwardIndefinitely(int instruct)
 
 void moveBackwardIndefinitely(void)
 {
-	htim1.Instance->CCR4 = 149;
+	htim1.Instance->CCR4 = 150;
 		osDelay(100);
 
 
@@ -2032,7 +2032,7 @@ void moveBackwardIndefinitely(void)
 }
 
 void rightWallCheck(void){
-	htim1.Instance->CCR4 = 149;
+	htim1.Instance->CCR4 = 150;
 		osDelay(100);
 
 
@@ -2068,7 +2068,7 @@ void rightWallCheck(void){
 
 }
 void leftWallCheck(void){
-	htim1.Instance->CCR4 = 149;
+	htim1.Instance->CCR4 = 150;
 		osDelay(100);
 
 
@@ -2142,7 +2142,7 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
 	HAL_ADC_Start_DMA(&hadc1, rightIR, 4096); // PC1 is right IR
 	HAL_ADC_Start_DMA(&hadc2,  leftIR, 4096); // PC2 is left IR
-	htim1.Instance->CCR4 = 149;
+	htim1.Instance->CCR4 = 150;
 	gyroInit();
 	//motorDir = 20;
 	//angle = 90;
@@ -2284,6 +2284,15 @@ void robotCommand(void const * argument)
 									angle=angle-10;
 								}
 							*/
+							if(angle==60){
+								angle=62;
+							} else if (angle==70) {
+								angle=72;
+							} else if (angle==80) {
+								angle=83;
+							} else if (angle==90) {
+								angle=93;
+							}
 							//__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2000); //left wheel was 1650
 							//__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2000); //right wheel was 1400
 							moveBackward("Straight", angle);
@@ -2298,14 +2307,14 @@ void robotCommand(void const * argument)
 							else{
 							Aint = 0;
 							gyroInit();
-							osDelay(delayOS);
+							//osDelay(delayOS);
 
 							//motorLeft(90);
-							moveForwardO("Straight", 1);
-							osDelay(delayOS);
+							//moveForwardO("Straight", 1);
+							//osDelay(delayOS);
 							motorLeft(angle-6);
 							osDelay(delayOS);
-							moveForwardO("Straight", 5);
+							//moveForwardO("Straight", 5);
 
 							/*moveBackward("Straight", 10);
 							osDelay(1);
@@ -2313,7 +2322,7 @@ void robotCommand(void const * argument)
 							moveBackward("Straight", 10);
 							*/
 							}
-							osDelay(delayOS);
+							//osDelay(delayOS);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "FR", 2) == 0){
 			total_angle=0;
@@ -2325,10 +2334,10 @@ void robotCommand(void const * argument)
 							gyroInit();
 							//osDelay(delayOS);
 							//moveBackward("Straight", 1);//in lab
-							osDelay(delayOS);
+							//osDelay(delayOS);
 							motorRight(angle-8);// inside lab
 							osDelay(delayOS);
-							moveForwardO("Straight", 4);
+							//moveForwardO("Straight", 4);
 							//motorRight(90);
 							//osDelay(delayOS);
 							//moveBackward("Straight", 1);
@@ -2336,19 +2345,19 @@ void robotCommand(void const * argument)
 							//motorRight(10);
 							//moveBackward("Straight", 10);
 							}
-							osDelay(delayOS);
+							//osDelay(delayOS);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "BL", 2) == 0){
 			total_angle=0;
 										Aint = 0;
 										gyroInit();
-										osDelay(delayOS);
+										//osDelay(delayOS);
 
 
 
 										//motorLeft(angle);
-			moveBackward("Straight", 6);//in lab
-			osDelay(delayOS);
+			//moveBackward("Straight", 6);//in lab
+			//osDelay(delayOS);
 			moveLBackward("Lf", angle-7);
 			//osDelay(1);
 			//moveBackward("Straight", 3);//in lab
@@ -2363,13 +2372,13 @@ void robotCommand(void const * argument)
 			gyroInit();
 			//moveBackward("Straight", 4);//in lab
 
-			moveBackward("Straight", 2);//for lab
-			osDelay(delayOS);
+			//moveBackward("Straight", 2);//for lab
+			//osDelay(delayOS);
 			moveRBackward("Rt", angle-4);// for lab
 			osDelay(delayOS);
 			//moveBackward("Straight", 1);//for lab
 			//moveForwardO("Straight", 1);
-			osDelay(delayOS);
+			//osDelay(delayOS);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 
@@ -2483,7 +2492,7 @@ void robotCommand(void const * argument)
 						gyroInit();
 						osDelay(10);
 												//printf("YOLO");
-						htim1.Instance->CCR4 = 149;
+						htim1.Instance->CCR4 = 150;
 						osDelay(delayOS);					//osDelay(1000);
 						HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
