@@ -374,7 +374,7 @@ int main(void)
   OLEDTaskHandle = osThreadCreate(osThread(OLEDTask), NULL);
 
   /* definition and creation of gyroTask */
-  osThreadDef(gyroTask, gyroTask1, osPriorityIdle, 0, 128*2);
+  osThreadDef(gyroTask, gyroTask1, osPriorityRealtime, 0, 128*2);
   gyroTaskHandle = osThreadCreate(osThread(gyroTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -1563,12 +1563,12 @@ void moveLBackward(char dir[2], int target_angle) {
     __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 500);  // Left wheel (adjust for reverse)
     __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000);  // Right wheel
     while(total_angle*-1  <= target_angle){
-    		osDelay(10);
+    		osDelay(1);
     		}
 
 
 
-    Aint = 0;
+
 
     // Adjust encoder comparison for backward movement
     /*while (totalLeftEncoder / 1550.0 * -21.04 < distance) {  // Same ratio but moving backward
@@ -1577,6 +1577,8 @@ void moveLBackward(char dir[2], int target_angle) {
     }*/
 
     stopMovement();  // Stop the movement after reaching the desired distance
+    osDelay(100);
+    Aint = 0;
     htim1.Instance->CCR4 = 150;
 
     // Reset motorDir to "ST" after movement stops
@@ -1602,10 +1604,10 @@ void moveRBackward(char dir[2], int target_angle) {
     __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 3000);  // Left wheel (adjust for reverse)
     __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 500);  // Right wheel
     while(total_angle  <= target_angle){
-    		osDelay(10);
+    		osDelay(1);
     		}
 
-
+    osDelay(100);
     stopMovement();  // Stop the movement after reaching the desired distance
     htim1.Instance->CCR4 = 150;
 
@@ -1697,7 +1699,7 @@ void motorLeft(int target_angle){
 
 	osDelay(10);
 	while(total_angle  <= target_angle){
-		osDelay(10);
+		osDelay(1);
 		}
 	/*
 	stopMovement();
@@ -2034,10 +2036,11 @@ void moveBackwardIndefinitely(void)
 void rightWallCheck(void){
 	htim1.Instance->CCR4 = 150;
 		osDelay(100);
-
+		total_angle=0;
 
 		// Set PWM to move both motors forward
-		if(41826*(1/(double)leftIR[0]) - 10.03 < 1500){ // move backwards
+		//if(41826*(1/(double)leftIR[0]) - 10.03< 500){ // move backwards
+		if(leftIR[0]< 500){
 			HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_SET);
 				HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
@@ -2045,21 +2048,24 @@ void rightWallCheck(void){
 				osDelay(10);
 				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
 				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
-				while(41826*(1/(double)leftIR[0]) - 10.03 < 60){
-					correctDirectionO(0, -1);  // Correct direction using PID
+				while(leftIR[0]< 500){
+					correctDirectionO(0, 1);  // Correct direction using PID
 					osDelay(10);
 				}
 				rampDownMotors(1500);
+				moveForward("Straight", 10);
+
 		}
-		if(41826*(1/(double)leftIR[0]) - 10.03 >1500){ //move forwards
-			HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
+		else //(41826*(1/(double)leftIR[0]) - 10.03 >500)
+			{ //move forwards
+						HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
 						HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
 						osDelay(10);
 						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
 						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
-						while(41826*(1/(double)leftIR[0]) - 10.03 > 60){
+						while(leftIR[0]> 500){
 							correctDirectionO(0, 1);  // Correct direction using PID
 							osDelay(10);
 						}
@@ -2070,10 +2076,11 @@ void rightWallCheck(void){
 void leftWallCheck(void){
 	htim1.Instance->CCR4 = 150;
 		osDelay(100);
-
+		total_angle=0;
 
 		// Set PWM to move both motors forward
-		if(37411*(1/(double)rightIR[0]) - 8.57 < 1500){ //move backwards
+		//if(37411*(1/(double)rightIR[0]) - 8.57 < 500)
+		if(rightIR[0]< 1000){ //move backwards
 			HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_SET);
 				HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
@@ -2081,13 +2088,14 @@ void leftWallCheck(void){
 				osDelay(10);
 				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
 				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
-				while(37411*(1/(double)rightIR[0]) - 8.57 < 60){
-					correctDirectionO(0, -1);  // Correct direction using PID
+				while(rightIR[0]< 1000){
+					correctDirectionO(0, 1);  // Correct direction using PID
 					osDelay(10);
 				}
 				rampDownMotors(1500);
+				moveForward("Straight", 20);
 		}
-		if(37411*(1/(double)rightIR[0]) - 8.57 > 1500){
+		else {
 			HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);
 						HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
@@ -2095,12 +2103,69 @@ void leftWallCheck(void){
 						osDelay(10);
 						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
 						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
-						while(37411*(1/(double)rightIR[0]) - 8.57 < 60){
+						while(rightIR[0]> 1000){
 							correctDirectionO(0, 1);  // Correct direction using PID
 							osDelay(10);
 						}
 						rampDownMotors(1500);
+						moveForward("Straight", 10);
 				}
+
+}
+void rightWallCheckUntilDetected(void) {
+	int previous = 0;
+	    htim1.Instance->CCR4 = 150;  // Some initial PWM setting
+	    osDelay(100);
+
+	    // Initially, the robot moves forward continuously until the right wall is detected.
+
+	    	HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);    // Move forward
+	    	        HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
+	    	        HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
+	    	        HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
+
+	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust speed
+	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust speed
+
+	    while (previous<300) {  // Right wall not detected
+	    	correctDirectionO(0, 1);  // Correct direction (e.g., using PID control)
+
+	        osDelay(10);
+	        previous=leftIR[0]-previous;
+	        if (previous<0){
+	        	previous=0;
+	        }
+	        osDelay(10);
+	    }
+	    rampDownMotors(1500);
+
+}
+void leftWallCheckUntilDetected(void) {
+	int previous = 0;
+    htim1.Instance->CCR4 = 150;  // Some initial PWM setting
+    osDelay(100);
+
+    // Initially, the robot moves forward continuously until the right wall is detected.
+
+    	HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_SET);    // Move forward
+    	        HAL_GPIO_WritePin(GPIOA, MotorA_IN2_Pin, GPIO_PIN_RESET);
+    	        HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
+    	        HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
+
+    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust speed
+    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust speed
+
+    while (previous<300) {  // Right wall not detected
+    	correctDirectionO(0, 1);  // Correct direction (e.g., using PID control)
+
+        osDelay(10);
+        previous=rightIR[0]-previous;
+        if (previous<0){
+        	previous=0;
+        }
+        osDelay(10);
+    }
+    rampDownMotors(1500);
 
 }
 void turnLeftIndefinitely(void)
@@ -2310,9 +2375,9 @@ void robotCommand(void const * argument)
 							//osDelay(delayOS);
 
 							//motorLeft(90);
-							moveForward("Straight", 1);
-							osDelay(delayOS);
-							motorLeft(angle-7);
+							//moveForward("Straight", 1);
+							//osDelay(delayOS);
+							motorLeft(angle-6);
 							osDelay(delayOS);
 							moveForward("Straight", 4);
 							//moveForwardO("Straight", 5);
@@ -2335,11 +2400,11 @@ void robotCommand(void const * argument)
 							gyroInit();
 							//osDelay(delayOS);
 							//moveBackward("Straight", 1);//in lab
-							moveForward("Straight", 2);
+							//moveForward("Straight", 2);
 							osDelay(delayOS);
-							motorRight(angle-6);// inside lab
+							motorRight(angle-7);// inside lab
 							osDelay(delayOS);
-							moveForward("Straight", 6);
+							//moveForward("Straight", 2);
 							//moveForwardO("Straight", 4);
 							//motorRight(90);
 							//osDelay(delayOS);
@@ -2359,7 +2424,7 @@ void robotCommand(void const * argument)
 
 
 										//motorLeft(angle);
-			moveBackward("Straight", 3);//in lab
+			moveBackward("Straight", 7);//in lab
 			osDelay(delayOS);
 			moveLBackward("Lf", angle-6);
 			osDelay(delayOS);
@@ -2373,7 +2438,7 @@ void robotCommand(void const * argument)
 			total_angle=0;
 			Aint = 0;
 			gyroInit();
-			moveBackward("Straight", 6);//in lab
+			moveBackward("Straight", 2);//in lab
 
 			//moveBackward("Straight", 2);//for lab
 			//osDelay(delayOS);
@@ -2395,13 +2460,13 @@ void robotCommand(void const * argument)
 
 									motorLeft(angle-6);
 									osDelay(delayOS);
-									moveForwardO("Straight", 5);
+									moveForward("Straight", 5);
 									osDelay(delayOS);
 									motorRight(angle-8);
 									osDelay(delayOS);
 									motorRight(angle-8);
 									osDelay(delayOS);
-									moveForwardO("Straight", 3);
+									moveForward("Straight", 3);
 									osDelay(delayOS);
 									motorLeft(angle-6);
 									osDelay(delayOS);
@@ -2418,13 +2483,13 @@ void robotCommand(void const * argument)
 				osDelay(delayOS);
 				motorRight(angle-8);
 				osDelay(delayOS);
-				moveForwardO("Straight", 6);
+				moveForward("Straight", 8);
 				osDelay(delayOS);
 				motorLeft(angle-6);
 				osDelay(delayOS);
 				motorLeft(angle-6);
 				osDelay(delayOS);
-				//moveForwardO("Straight", 3);
+				moveForward("Straight", 3);
 				osDelay(delayOS);
 				motorRight(angle-8);
 				osDelay(delayOS);
@@ -2441,16 +2506,18 @@ void robotCommand(void const * argument)
 					osDelay(delayOS);
 					motorRight(angle-8);
 					osDelay(delayOS);
-					rightWallCheck();
+					leftWallCheck();
 					osDelay(delayOS);
 					motorLeft(174);
-					/*
+
 
 					osDelay(delayOS);
-					rightWallCheck();
+					leftWallCheck();
 					osDelay(delayOS);
 					motorLeft(angle-6);
 					osDelay(delayOS);
+					leftWallCheckUntilDetected();
+					/*
 					rightWallCheck();
 					osDelay(delayOS);
 					motorLeft(angle-6);
@@ -2470,16 +2537,18 @@ void robotCommand(void const * argument)
 					osDelay(delayOS);
 					motorLeft(angle-6); //LEFT 90
 					osDelay(delayOS);
-					leftWallCheck();
+					rightWallCheck();
 					osDelay(delayOS);
 					motorRight(172);
 					osDelay(delayOS);
-					leftWallCheck();
+					rightWallCheck();
 					osDelay(delayOS);
+
 					motorRight(angle-8);
 					osDelay(delayOS);
+					rightWallCheckUntilDetected();
 					/*
-
+					rightWallCheckUntilDetected(void)
 
 
 					leftWallCheck();
@@ -3063,7 +3132,8 @@ void OLEDShow(void const * argument)
 	  OLED_ShowString(10,20, oledText);
 	  sprintf(oledText, "distance: %5d", (int)Distance);
 	  OLED_ShowString(10,30, oledText);
-	  sprintf(oledText, "Left  %3d", (int)encoderdis);
+	  sprintf(oledText, "IR %4d %4d", (int)leftIR[0], (int)rightIR[0]);
+	  //sprintf(oledText, "Left  %3d", (int)encoderdis);
 	  OLED_ShowString(10,40, oledText);
 	  sprintf(oledText, "UART: %.4s", aRxBuffer);
 	  //sprintf(oledText, "Right  %3d", (int)encoderright);
@@ -3097,7 +3167,7 @@ void gyroTask1(void const * argument)
 		int16_t offset = 0;
 
 		tick = HAL_GetTick();
-		osDelay(10);
+		osDelay(1);
 
 	//	for(int i = 0; i < 3000; i++){
 	//		readByte(0x37, val);
@@ -3109,7 +3179,7 @@ void gyroTask1(void const * argument)
 
 	  for(;;)
 	  {
-	      osDelay(10);
+	      osDelay(1);
 
 	      if(HAL_GetTick() - tick >= 100){
 		  readByte(0x37, val);
@@ -3119,15 +3189,16 @@ void gyroTask1(void const * argument)
 
 
 		  // for gyro drift removal, calibration needs to be added to angular speed
-		  total_angle +=(double)(angular_speed - 1.7)*((HAL_GetTick() - tick)/16400.0);
+		  //total_angle +=(double)(angular_speed - 1.7)*((HAL_GetTick() - tick)/16400.0);
 		  // Calculate new (unfiltered) angle increment
-		 // double new_angle_increment = (double)(angular_speed - 1.7) * ((HAL_GetTick() - tick) / 16400.0);
+		 double alpha = 1.0;
+		 double new_angle_increment = (double)(angular_speed - 1.7) * ((HAL_GetTick() - tick) / 16400.0);
 
-		              // Apply the low-pass filter to the new angle increment
-		             // double filtered_increment = applyLowPassFilter(0, new_angle_increment, alpha); // Initialize previous value as 0 for the first run
+//		              // Apply the low-pass filter to the new angle increment
+		              double filtered_increment = applyLowPassFilter(0, new_angle_increment, alpha); // Initialize previous value as 0 for the first run
 
 		              // Update total angle with the filtered increment
-		             // total_angle += filtered_increment;
+		              total_angle += filtered_increment;
 		  //prevSpeed = angular_speed;
 		  if(total_angle >= 720){
 			  total_angle = 0;
