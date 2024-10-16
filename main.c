@@ -350,7 +350,7 @@ int main(void)
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of robotCommandTas */
-  osThreadDef(robotCommandTas, robotCommand, osPriorityIdle, 0, 128*4);
+  osThreadDef(robotCommandTas, robotCommand, osPriorityIdle, 0, 128*2);
   robotCommandTasHandle = osThreadCreate(osThread(robotCommandTas), NULL);
 
   /* definition and creation of leftEncoderTask */
@@ -374,7 +374,7 @@ int main(void)
   OLEDTaskHandle = osThreadCreate(osThread(OLEDTask), NULL);
 
   /* definition and creation of gyroTask */
-  osThreadDef(gyroTask, gyroTask1, osPriorityRealtime, 0, 128*4);
+  osThreadDef(gyroTask, gyroTask1, osPriorityIdle, 0, 128*4);
   gyroTaskHandle = osThreadCreate(osThread(gyroTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -967,6 +967,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     UNUSED(huart);  // Prevent unused argument warning
 
     // Directly copy the first two characters to motorDir
+
+
     strncpy(motorDir, aRxBuffer, 2);
     //motorDir[2] = '\0';  // Null-terminate the string
 
@@ -1951,12 +1953,12 @@ void moveForwardIndefinitely(int instruct)
 	int dis1=0;
 	int count=0;
 	if(instruct==99){
-		dis=40;
-		dis1=20;
+		dis=28;
+		dis1=25;
 	}
 	else{
-		dis=50;
-		dis1=30;
+		dis=38;
+		dis1=34;
 	}
 	htim1.Instance->CCR4 = 150;
 	osDelay(100);
@@ -1980,7 +1982,8 @@ void moveForwardIndefinitely(int instruct)
 				correctDirectionO(0, 1);  // Correct direction using PID
 				osDelay(10);
 		}
-		rampDownMotors(3000);
+		//rampDownMotors(3000);
+		stopMovement();
 	}
 	else if(Distance<dis1){
 		HAL_GPIO_WritePin(GPIOA, MotorA_IN1_Pin, GPIO_PIN_RESET);
@@ -1988,8 +1991,8 @@ void moveForwardIndefinitely(int instruct)
 			HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
 			osDelay(10);
-			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
-			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2000);  // Adjust this value as per speed
+			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2000);  // Adjust this value as per speed
 			while(count<3){
 				if(Distance>dis1){
 					count++;
@@ -1997,7 +2000,8 @@ void moveForwardIndefinitely(int instruct)
 				correctDirectionO(0, 1);  // Correct direction using PID
 				osDelay(10);
 			}
-			rampDownMotors(1500);
+			//rampDownMotors(1500);
+			stopMovement();
 	}
 
 }
@@ -2053,8 +2057,8 @@ void rightWallCheck(void){
 				HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
 				osDelay(10);
-				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust this value as per speed
-				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 3000);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000);  // Adjust this value as per speed
 				while(leftIR[0]< 500){
 					correctDirection(0, 1);  // Correct direction using PID
 					osDelay(10);
@@ -2070,8 +2074,8 @@ void rightWallCheck(void){
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
 						osDelay(10);
-						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust this value as per speed
-						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 3000);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000);  // Adjust this value as per speed
 						while(leftIR[0]> 500){
 							correctDirection(0, 1);  // Correct direction using PID
 							osDelay(10);
@@ -2094,8 +2098,8 @@ void leftWallCheck(void){
 				HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
 				osDelay(10);
-				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust this value as per speed
-				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 3000);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000);  // Adjust this value as per speed
 				while(rightIR[0]< 1000){
 					correctDirection(0, 1);  // Correct direction using PID
 					osDelay(10);
@@ -2109,8 +2113,8 @@ void leftWallCheck(void){
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
 						osDelay(10);
-						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust this value as per speed
-						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 3000);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000);  // Adjust this value as per speed
 						while(rightIR[0]> 1000){
 							correctDirection(0, 1);  // Correct direction using PID
 							osDelay(10);
@@ -2134,10 +2138,10 @@ void rightWallCheckUntilDetected(void) {
 	    	        HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
 	    	        HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
 
-	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust speed
-	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust speed
+	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 3000);  // Adjust speed
+	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000);  // Adjust speed
 
-	    while (previous<500) {  // Right wall not detected
+	    while (previous<400) {  // Right wall not detected
 	    	correctDirectionO(0, 1);  // Correct direction (e.g., using PID control)
 
 	        osDelay(10);
@@ -2164,10 +2168,10 @@ void leftWallCheckUntilDetected(void) {
     	        HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
     	        HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
 
-    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust speed
-    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust speed
+    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 3000);  // Adjust speed
+    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000);  // Adjust speed
 
-    while (previous<800) {  // Right wall not detected
+    while (previous<700) {  // Right wall not detected
     	correctDirectionO(0, 1);  // Correct direction (e.g., using PID control)
 
         osDelay(10);
@@ -2227,7 +2231,7 @@ void StartDefaultTask(void const * argument)
   for(;;)
   {
 	  ultrasonic_read();
-	  osDelay(50);
+	  osDelay(20);
   }
   /* USER CODE END 5 */
 }
@@ -2335,8 +2339,9 @@ void robotCommand(void const * argument)
 								//moveForward("Straight", (angle-5)*0.9);
 								moveForward("Straight", angle);
 							}
-							//osDelay(delayOS);
-							osDelay(10);
+							osDelay(delayOS);
+							//osDelay(10);
+							memset(aRxBuffer,0,sizeof(aRxBuffer));
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 
@@ -2376,7 +2381,9 @@ void robotCommand(void const * argument)
 							moveBackward("Straight", angle);
 							}
 							//osDelay(delayOS);
+							memset(aRxBuffer,0,sizeof(aRxBuffer));
 							osDelay(10);
+
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "FL", 2) == 0){
 			total_angle=0;
@@ -2403,6 +2410,7 @@ void robotCommand(void const * argument)
 							*/
 							}
 							//osDelay(delayOS);
+							memset(aRxBuffer,0,sizeof(aRxBuffer));
 							osDelay(10);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "FR", 2) == 0){
@@ -2429,6 +2437,7 @@ void robotCommand(void const * argument)
 							//moveBackward("Straight", 10);
 							}
 							//osDelay(delayOS);
+							memset(aRxBuffer,0,sizeof(aRxBuffer));
 							osDelay(10);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "BL", 2) == 0){
@@ -2448,6 +2457,7 @@ void robotCommand(void const * argument)
 			osDelay(delayOS);
 			moveBackward("Straight", 2);//in lab
 			//osDelay(delayOS);
+			memset(aRxBuffer,0,sizeof(aRxBuffer));
 			osDelay(10);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
@@ -2464,6 +2474,7 @@ void robotCommand(void const * argument)
 			moveBackward("Straight", 1);//for lab
 			//moveForwardO("Straight", 1);
 			//osDelay(delayOS);
+			memset(aRxBuffer,0,sizeof(aRxBuffer));
 			osDelay(10);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
@@ -2478,19 +2489,20 @@ void robotCommand(void const * argument)
 
 									motorLeft(angle-6);
 									//osDelay(10)
-									osDelay(delayOS);;
+									//osDelay(delayOS);;
 									moveForward("Straight", 5);
-									osDelay(delayOS);
+									//osDelay(delayOS);
 									//osDelay(10);
 									motorRight(angle-8);
-									osDelay(delayOS);
+									//osDelay(delayOS);
 									motorRight(angle-8);
-									osDelay(delayOS);
+									//osDelay(delayOS);
 									//osDelay(10);
 									moveForward("Straight", 5);
-									osDelay(delayOS);
+									//osDelay(delayOS);
 									//osDelay(10);
 									motorLeft(angle-6);
+									memset(aRxBuffer,0,sizeof(aRxBuffer));
 									osDelay(delayOS);
 
 
@@ -2504,21 +2516,22 @@ void robotCommand(void const * argument)
 				gyroInit();
 				osDelay(10);
 				motorRight(angle-8);
-				osDelay(delayOS);
+				//osDelay(delayOS);
 				//osDelay(10);
 				moveForward("Straight", 8);
-				osDelay(delayOS);
+				//osDelay(delayOS);
 				//osDelay(10);
 				motorLeft(angle-6);
-				osDelay(delayOS);
+				//osDelay(delayOS);
 				//osDelay(10);
 				motorLeft(angle-6);
-				osDelay(delayOS);
+				//osDelay(delayOS);
 				//osDelay(10);
-				moveForward("Straight", 6);
-				osDelay(delayOS);
+				moveForward("Straight", 4);
+				//osDelay(delayOS);
 				//osDelay(10);
 				motorRight(angle-8);
+				memset(aRxBuffer,0,sizeof(aRxBuffer));
 				osDelay(delayOS);
 
 
@@ -2550,8 +2563,22 @@ void robotCommand(void const * argument)
 					moveForward("Straight", 40);
 					osDelay(10);
 					leftWallCheckUntilDetected();
-					motorLeft(84);
-					motorRight(82);
+					osDelay(delayOS);
+					moveForward("Straight", 10);
+
+					osDelay(delayOS);
+					motorLeft(angle-6);
+					osDelay(delayOS);
+					moveForward("Straight", 10);
+					osDelay(delayOS);
+					leftWallCheckUntilDetected();
+					osDelay(delayOS);
+					moveBackward("Straight", 15);
+
+					osDelay(delayOS);
+					motorRight(angle-8);
+					//osDelay(delayOS);
+
 					/*
 					rightWallCheck();
 					osDelay(delayOS);
@@ -2560,7 +2587,7 @@ void robotCommand(void const * argument)
 					rightWallCheck();
 					osDelay(delayOS);
 					*/
-
+					memset(aRxBuffer,0,sizeof(aRxBuffer));
 					osDelay(10);
 				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 						}
@@ -2574,7 +2601,7 @@ void robotCommand(void const * argument)
 					osDelay(10);
 					rightWallCheck();
 					osDelay(10);
-					motorRight(172);
+					motorRight(173);
 					total_angle=0;
 					osDelay(delayOS);
 					moveForward("Straight", 60);
@@ -2587,8 +2614,20 @@ void robotCommand(void const * argument)
 					moveForward("Straight", 40);
 					osDelay(10);
 					rightWallCheckUntilDetected();
+					osDelay(delayOS);
+					moveForward("Straight", 10);
+
+					osDelay(delayOS);
 					motorRight(82);
-					motorLeft(84);
+					osDelay(delayOS);
+					moveForward("Straight", 10);
+					osDelay(delayOS);
+					rightWallCheckUntilDetected();
+					osDelay(delayOS);
+					moveBackward("Straight", 15);//for lab
+
+					osDelay(delayOS);
+					motorLeft(angle-6);
 
 					/*
 					rightWallCheckUntilDetected(void)
@@ -2601,7 +2640,7 @@ void robotCommand(void const * argument)
 					leftWallCheck(); //align with 2nd box
 					osDelay(delayOS);
 					*/
-
+					memset(aRxBuffer,0,sizeof(aRxBuffer));
 
 					osDelay(10);
 				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
@@ -2614,6 +2653,7 @@ void robotCommand(void const * argument)
 						osDelay(10);
 												//printf("YOLO");
 						htim1.Instance->CCR4 = 150;
+						memset(aRxBuffer,0,sizeof(aRxBuffer));
 						osDelay(delayOS);					//osDelay(1000);
 						HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
