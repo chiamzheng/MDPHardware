@@ -346,23 +346,23 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128*2);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128*4);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of robotCommandTas */
-  osThreadDef(robotCommandTas, robotCommand, osPriorityIdle, 0, 128*3);
+  osThreadDef(robotCommandTas, robotCommand, osPriorityIdle, 0, 128*4);
   robotCommandTasHandle = osThreadCreate(osThread(robotCommandTas), NULL);
 
   /* definition and creation of leftEncoderTask */
-  osThreadDef(leftEncoderTask, leftEncoder, osPriorityIdle, 0, 128*3);
+  osThreadDef(leftEncoderTask, leftEncoder, osPriorityIdle, 0, 128*4);
   leftEncoderTaskHandle = osThreadCreate(osThread(leftEncoderTask), NULL);
 
   /* definition and creation of rightEncoderTas */
-  osThreadDef(rightEncoderTas, rightEncoder, osPriorityIdle, 0, 128*3);
+  osThreadDef(rightEncoderTas, rightEncoder, osPriorityIdle, 0, 128*2);
   rightEncoderTasHandle = osThreadCreate(osThread(rightEncoderTas), NULL);
 
   /* definition and creation of stopBotTask */
-  osThreadDef(stopBotTask, stopBot, osPriorityIdle, 0, 128*3);
+  osThreadDef(stopBotTask, stopBot, osPriorityIdle, 0, 128*2);
   stopBotTaskHandle = osThreadCreate(osThread(stopBotTask), NULL);
 
   /* definition and creation of motorTask */
@@ -370,11 +370,11 @@ int main(void)
   motorTaskHandle = osThreadCreate(osThread(motorTask), NULL);
 
   /* definition and creation of OLEDTask */
-  osThreadDef(OLEDTask, OLEDShow, osPriorityIdle, 0, 128*2);
+  osThreadDef(OLEDTask, OLEDShow, osPriorityIdle, 0, 128*4);
   OLEDTaskHandle = osThreadCreate(osThread(OLEDTask), NULL);
 
   /* definition and creation of gyroTask */
-  osThreadDef(gyroTask, gyroTask1, osPriorityRealtime, 0, 128*2);
+  osThreadDef(gyroTask, gyroTask1, osPriorityRealtime, 0, 128*4);
   gyroTaskHandle = osThreadCreate(osThread(gyroTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -1585,6 +1585,7 @@ void moveLBackward(char dir[2], int target_angle) {
 }
 void moveRBackward(char dir[2], int target_angle) {
 	total_angle = 0;
+	totalLeftEncoder = 0;
     uint32_t delay = 0;
     stopMovement();
     osDelay(100);
@@ -1673,7 +1674,7 @@ void motorRight(int target_angle){
 
 }
 void motorLeft(int target_angle){
-
+	totalLeftEncoder = 0;
 	total_angle = 0;
 	//target_angle = angle;
 
@@ -1948,6 +1949,7 @@ void moveForwardIndefinitely(int instruct)
 {
 	int dis=0;
 	int dis1=0;
+	int count=0;
 	if(instruct==99){
 		dis=40;
 		dis1=20;
@@ -1959,7 +1961,7 @@ void moveForwardIndefinitely(int instruct)
 	htim1.Instance->CCR4 = 150;
 	osDelay(100);
 
-
+	totalLeftEncoder = 0;
 	// Set PWM to move both motors forward
 
 	if(Distance>dis){
@@ -1970,9 +1972,11 @@ void moveForwardIndefinitely(int instruct)
 			osDelay(10);
 			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 3000);  // Adjust this value as per speed
 			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 3000);  // Adjust this value as per speed
-		while(Distance > dis){
-								//correctDirection(0, 1);
-
+		while(count<3){
+							//correctDirection(0, 1);
+			if(Distance < dis){
+				count++;
+			}
 				correctDirectionO(0, 1);  // Correct direction using PID
 				osDelay(10);
 		}
@@ -1986,7 +1990,10 @@ void moveForwardIndefinitely(int instruct)
 			osDelay(10);
 			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
 			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
-			while(Distance<dis1){
+			while(count<3){
+				if(Distance>dis1){
+					count++;
+				}
 				correctDirectionO(0, 1);  // Correct direction using PID
 				osDelay(10);
 			}
@@ -2037,7 +2044,7 @@ void rightWallCheck(void){
 	htim1.Instance->CCR4 = 150;
 		osDelay(100);
 		total_angle=0;
-
+		totalLeftEncoder = 0;
 		// Set PWM to move both motors forward
 		//if(41826*(1/(double)leftIR[0]) - 10.03< 500){ // move backwards
 		if(leftIR[0]< 500){
@@ -2046,8 +2053,8 @@ void rightWallCheck(void){
 				HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
 				osDelay(10);
-				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
-				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust this value as per speed
 				while(leftIR[0]< 500){
 					correctDirection(0, 1);  // Correct direction using PID
 					osDelay(10);
@@ -2063,8 +2070,8 @@ void rightWallCheck(void){
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
 						osDelay(10);
-						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
-						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust this value as per speed
 						while(leftIR[0]> 500){
 							correctDirection(0, 1);  // Correct direction using PID
 							osDelay(10);
@@ -2077,6 +2084,7 @@ void leftWallCheck(void){
 	htim1.Instance->CCR4 = 150;
 		osDelay(100);
 		total_angle=0;
+		totalLeftEncoder = 0;
 
 		// Set PWM to move both motors forward
 		//if(37411*(1/(double)rightIR[0]) - 8.57 < 500)
@@ -2086,8 +2094,8 @@ void leftWallCheck(void){
 				HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_SET);
 				osDelay(10);
-				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
-				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust this value as per speed
+				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust this value as per speed
 				while(rightIR[0]< 1000){
 					correctDirection(0, 1);  // Correct direction using PID
 					osDelay(10);
@@ -2101,8 +2109,8 @@ void leftWallCheck(void){
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
 						HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
 						osDelay(10);
-						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
-						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust this value as per speed
+						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust this value as per speed
 						while(rightIR[0]> 1000){
 							correctDirection(0, 1);  // Correct direction using PID
 							osDelay(10);
@@ -2113,6 +2121,8 @@ void leftWallCheck(void){
 
 }
 void rightWallCheckUntilDetected(void) {
+	total_angle=0;
+	totalLeftEncoder = 0;
 	int previous = 0;
 	    htim1.Instance->CCR4 = 150;  // Some initial PWM setting
 	    osDelay(100);
@@ -2124,11 +2134,11 @@ void rightWallCheckUntilDetected(void) {
 	    	        HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
 	    	        HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
 
-	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust speed
-	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust speed
+	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust speed
+	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust speed
 
-	    while (previous<300) {  // Right wall not detected
-	    	correctDirection(0, 1);  // Correct direction (e.g., using PID control)
+	    while (previous<500) {  // Right wall not detected
+	    	correctDirectionO(0, 1);  // Correct direction (e.g., using PID control)
 
 	        osDelay(10);
 	        previous=leftIR[0]-previous;
@@ -2141,6 +2151,8 @@ void rightWallCheckUntilDetected(void) {
 
 }
 void leftWallCheckUntilDetected(void) {
+	total_angle=0;
+	totalLeftEncoder = 0;
 	int previous = 0;
     htim1.Instance->CCR4 = 150;  // Some initial PWM setting
     osDelay(100);
@@ -2152,11 +2164,11 @@ void leftWallCheckUntilDetected(void) {
     	        HAL_GPIO_WritePin(GPIOA, MotorB_IN1_Pin, GPIO_PIN_SET);
     	        HAL_GPIO_WritePin(GPIOA, MotorB_IN2_Pin, GPIO_PIN_RESET);
 
-    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust speed
-    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust speed
+    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 2500);  // Adjust speed
+    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 2500);  // Adjust speed
 
-    while (previous<300) {  // Right wall not detected
-    	correctDirection(0, 1);  // Correct direction (e.g., using PID control)
+    while (previous<800) {  // Right wall not detected
+    	correctDirectionO(0, 1);  // Correct direction (e.g., using PID control)
 
         osDelay(10);
         previous=rightIR[0]-previous;
@@ -2465,18 +2477,22 @@ void robotCommand(void const * argument)
 									osDelay(delayOS);
 
 									motorLeft(angle-6);
-									osDelay(delayOS);
+									//osDelay(10)
+									osDelay(delayOS);;
 									moveForward("Straight", 5);
 									osDelay(delayOS);
+									//osDelay(10);
 									motorRight(angle-8);
 									osDelay(delayOS);
 									motorRight(angle-8);
 									osDelay(delayOS);
-									moveForward("Straight", 3);
+									//osDelay(10);
+									moveForward("Straight", 5);
 									osDelay(delayOS);
+									//osDelay(10);
 									motorLeft(angle-6);
-									//osDelay(delayOS);
-									osDelay(10);
+									osDelay(delayOS);
+
 
 									//osDelay(delayOS);
 									HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
@@ -2486,22 +2502,27 @@ void robotCommand(void const * argument)
 				angle=45;
 				Aint = 0;
 				gyroInit();
-				osDelay(delayOS);
+				osDelay(10);
 				motorRight(angle-8);
 				osDelay(delayOS);
+				//osDelay(10);
 				moveForward("Straight", 8);
 				osDelay(delayOS);
+				//osDelay(10);
 				motorLeft(angle-6);
 				osDelay(delayOS);
+				//osDelay(10);
 				motorLeft(angle-6);
 				osDelay(delayOS);
-				moveForward("Straight", 3);
+				//osDelay(10);
+				moveForward("Straight", 6);
 				osDelay(delayOS);
+				//osDelay(10);
 				motorRight(angle-8);
-				//osDelay(delayOS);
+				osDelay(delayOS);
 
 
-				osDelay(10);
+				//osDelay(10);
 				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}
 		else if (strncmp(motorDir, "LR", 2) == 0){
@@ -2513,16 +2534,24 @@ void robotCommand(void const * argument)
 					motorRight(angle-8);
 					osDelay(delayOS);
 					leftWallCheck();
+					//osDelay(10);
+					//moveForward("Straight", 15);
+					//osDelay(10);
 					osDelay(delayOS);
 					motorLeft(174);
-
-
+					total_angle=0;
 					osDelay(delayOS);
+					moveForward("Straight", 60);
 					leftWallCheck();
+					//osDelay(10);
 					osDelay(delayOS);
 					motorLeft(angle-6);
 					osDelay(delayOS);
+					moveForward("Straight", 40);
+					osDelay(10);
 					leftWallCheckUntilDetected();
+					motorLeft(84);
+					motorRight(82);
 					/*
 					rightWallCheck();
 					osDelay(delayOS);
@@ -2542,17 +2571,25 @@ void robotCommand(void const * argument)
 					gyroInit();
 					osDelay(delayOS);
 					motorLeft(angle-6); //LEFT 90
-					osDelay(delayOS);
+					osDelay(10);
 					rightWallCheck();
-					osDelay(delayOS);
+					osDelay(10);
 					motorRight(172);
+					total_angle=0;
 					osDelay(delayOS);
+					moveForward("Straight", 60);
+					osDelay(10);
 					rightWallCheck();
-					osDelay(delayOS);
+					osDelay(10);
 
 					motorRight(angle-8);
 					osDelay(delayOS);
+					moveForward("Straight", 40);
+					osDelay(10);
 					rightWallCheckUntilDetected();
+					motorRight(82);
+					motorLeft(84);
+
 					/*
 					rightWallCheckUntilDetected(void)
 
@@ -3088,7 +3125,8 @@ void stopBot(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    if(motorDir == 0)
+
+	  if(motorDir == 0)
     	stopMovement();
   }
   /* USER CODE END stopBot */
