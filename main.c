@@ -1973,7 +1973,7 @@ void moveForwardIndefinitely(int instruct)
 		while(Distance > dis){
 								//correctDirection(0, 1);
 
-				correctDirection(0, 1);  // Correct direction using PID
+				correctDirectionO(0, 1);  // Correct direction using PID
 				osDelay(10);
 		}
 		rampDownMotors(3000);
@@ -1987,7 +1987,7 @@ void moveForwardIndefinitely(int instruct)
 			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
 			__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
 			while(Distance<dis1){
-				correctDirection(0, -1);  // Correct direction using PID
+				correctDirectionO(0, 1);  // Correct direction using PID
 				osDelay(10);
 			}
 			rampDownMotors(1500);
@@ -2049,7 +2049,7 @@ void rightWallCheck(void){
 				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
 				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
 				while(leftIR[0]< 500){
-					correctDirectionO(0, 1);  // Correct direction using PID
+					correctDirection(0, 1);  // Correct direction using PID
 					osDelay(10);
 				}
 				rampDownMotors(1500);
@@ -2066,7 +2066,7 @@ void rightWallCheck(void){
 						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
 						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
 						while(leftIR[0]> 500){
-							correctDirectionO(0, 1);  // Correct direction using PID
+							correctDirection(0, 1);  // Correct direction using PID
 							osDelay(10);
 						}
 						rampDownMotors(1500);
@@ -2089,7 +2089,7 @@ void leftWallCheck(void){
 				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
 				__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
 				while(rightIR[0]< 1000){
-					correctDirectionO(0, 1);  // Correct direction using PID
+					correctDirection(0, 1);  // Correct direction using PID
 					osDelay(10);
 				}
 				rampDownMotors(1500);
@@ -2104,7 +2104,7 @@ void leftWallCheck(void){
 						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, 1500);  // Adjust this value as per speed
 						__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust this value as per speed
 						while(rightIR[0]> 1000){
-							correctDirectionO(0, 1);  // Correct direction using PID
+							correctDirection(0, 1);  // Correct direction using PID
 							osDelay(10);
 						}
 						rampDownMotors(1500);
@@ -2128,7 +2128,7 @@ void rightWallCheckUntilDetected(void) {
 	    	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust speed
 
 	    while (previous<300) {  // Right wall not detected
-	    	correctDirectionO(0, 1);  // Correct direction (e.g., using PID control)
+	    	correctDirection(0, 1);  // Correct direction (e.g., using PID control)
 
 	        osDelay(10);
 	        previous=leftIR[0]-previous;
@@ -2156,7 +2156,7 @@ void leftWallCheckUntilDetected(void) {
     	        __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, 1500);  // Adjust speed
 
     while (previous<300) {  // Right wall not detected
-    	correctDirectionO(0, 1);  // Correct direction (e.g., using PID control)
+    	correctDirection(0, 1);  // Correct direction (e.g., using PID control)
 
         osDelay(10);
         previous=rightIR[0]-previous;
@@ -2324,6 +2324,7 @@ void robotCommand(void const * argument)
 								moveForward("Straight", angle);
 							}
 							//osDelay(delayOS);
+							osDelay(10);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 
@@ -2363,6 +2364,7 @@ void robotCommand(void const * argument)
 							moveBackward("Straight", angle);
 							}
 							//osDelay(delayOS);
+							osDelay(10);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "FL", 2) == 0){
 			total_angle=0;
@@ -2389,6 +2391,7 @@ void robotCommand(void const * argument)
 							*/
 							}
 							//osDelay(delayOS);
+							osDelay(10);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "FR", 2) == 0){
 			total_angle=0;
@@ -2403,7 +2406,7 @@ void robotCommand(void const * argument)
 							//moveForward("Straight", 2);
 							osDelay(delayOS);
 							motorRight(angle-7);// inside lab
-							osDelay(delayOS);
+							//osDelay(delayOS);
 							//moveForward("Straight", 2);
 							//moveForwardO("Straight", 4);
 							//motorRight(90);
@@ -2414,6 +2417,7 @@ void robotCommand(void const * argument)
 							//moveBackward("Straight", 10);
 							}
 							//osDelay(delayOS);
+							osDelay(10);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "BL", 2) == 0){
 			total_angle=0;
@@ -2432,6 +2436,7 @@ void robotCommand(void const * argument)
 			osDelay(delayOS);
 			moveBackward("Straight", 2);//in lab
 			//osDelay(delayOS);
+			osDelay(10);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 		}else if (strncmp(motorDir, "BR", 2) == 0){
@@ -2447,6 +2452,7 @@ void robotCommand(void const * argument)
 			moveBackward("Straight", 1);//for lab
 			//moveForwardO("Straight", 1);
 			//osDelay(delayOS);
+			osDelay(10);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 
@@ -2469,8 +2475,8 @@ void robotCommand(void const * argument)
 									moveForward("Straight", 3);
 									osDelay(delayOS);
 									motorLeft(angle-6);
-									osDelay(delayOS);
-
+									//osDelay(delayOS);
+									osDelay(10);
 
 									//osDelay(delayOS);
 									HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
@@ -2492,10 +2498,10 @@ void robotCommand(void const * argument)
 				moveForward("Straight", 3);
 				osDelay(delayOS);
 				motorRight(angle-8);
-				osDelay(delayOS);
+				//osDelay(delayOS);
 
 
-
+				osDelay(10);
 				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}
 		else if (strncmp(motorDir, "LR", 2) == 0){
@@ -2526,7 +2532,7 @@ void robotCommand(void const * argument)
 					osDelay(delayOS);
 					*/
 
-
+					osDelay(10);
 				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 						}
 		else if (strncmp(motorDir, "LL", 2) == 0){
@@ -2560,7 +2566,7 @@ void robotCommand(void const * argument)
 					*/
 
 
-
+					osDelay(10);
 				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 						}
 		else if (strncmp(motorDir, "RS", 2) == 0){
