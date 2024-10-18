@@ -110,7 +110,7 @@ float Right_PID_control (float setpoint, float measure);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t aRxBuffer[20];
+uint8_t aRxBuffer[10];
 
 uint16_t leftIR[4096]; // PC2 is left IR
 uint16_t rightIR[4096]; // PC1 is right IR
@@ -125,6 +125,7 @@ int totalRightEncoder=0;
 uint8_t buff[20];
 int delayOS = 300; // in milisec
 int motorPower=4000;
+int RX_BUFFER_SIZE =10;
 //PID variables
 float Kp=6, Ki=0.01, Kd=0.01;
 float T=5; /*Sample Period*/
@@ -164,6 +165,11 @@ void writeByte(uint8_t addr, uint8_t data){
 double applyLowPassFilter(double current_angle, double new_measurement, double alpha) {
     return alpha * new_measurement + (1 - alpha) * current_angle;
 }
+
+double applyHighPassFilter(double current_angle, double measured_increment, double alpha) {
+    return alpha * current_angle + alpha * measured_increment;
+}
+
 /*
 void correctDirection(double target_angle, int dir){
 	int pidVal;
@@ -350,7 +356,7 @@ int main(void)
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of robotCommandTas */
-  osThreadDef(robotCommandTas, robotCommand, osPriorityIdle, 0, 128*2);
+  osThreadDef(robotCommandTas, robotCommand, osPriorityIdle, 0, 128*4);
   robotCommandTasHandle = osThreadCreate(osThread(robotCommandTas), NULL);
 
   /* definition and creation of leftEncoderTask */
@@ -967,7 +973,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     UNUSED(huart);  // Prevent unused argument warning
 
     // Directly copy the first two characters to motorDir
-
+    HAL_UART_Receive_IT(&huart3, aRxBuffer, 4);  // Receive 4 bytes
 
     strncpy(motorDir, aRxBuffer, 2);
     //motorDir[2] = '\0';  // Null-terminate the string
@@ -988,7 +994,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     }
 
     // Prepare for the next UART data reception
-    HAL_UART_Receive_IT(&huart3, aRxBuffer, 4);  // Receive 4 bytes
+    __HAL_UART_FLUSH_DRREGISTER(&huart3);
+    HAL_UART_Receive_IT(&huart3, aRxBuffer, 4);
 
 }
 
@@ -2231,7 +2238,7 @@ void StartDefaultTask(void const * argument)
   for(;;)
   {
 	  ultrasonic_read();
-	  osDelay(20);
+	  osDelay(60);
   }
   /* USER CODE END 5 */
 }
@@ -2271,12 +2278,12 @@ void robotCommand(void const * argument)
 
 	for(;;){
 		target_angle = 0;
-
+/*
 		if (strncmp(motorDir, "ST", 2) == 0){
 			stopMovement();
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
-		}else if (strncmp(motorDir, "FW", 2) == 0){
+		}else*/ if (strncmp(motorDir, "FW", 2) == 0){
 							total_angle=0;
 							if(angle==99){
 								Aint = 0;
@@ -2341,7 +2348,8 @@ void robotCommand(void const * argument)
 							}
 							osDelay(delayOS);
 							//osDelay(10);
-							memset(aRxBuffer,0,sizeof(aRxBuffer));
+							__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
 
@@ -2381,7 +2389,8 @@ void robotCommand(void const * argument)
 							moveBackward("Straight", angle);
 							}
 							//osDelay(delayOS);
-							memset(aRxBuffer,0,sizeof(aRxBuffer));
+							__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 							osDelay(10);
 
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
@@ -2410,7 +2419,8 @@ void robotCommand(void const * argument)
 							*/
 							}
 							//osDelay(delayOS);
-							memset(aRxBuffer,0,sizeof(aRxBuffer));
+							__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 							osDelay(10);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "FR", 2) == 0){
@@ -2437,7 +2447,8 @@ void robotCommand(void const * argument)
 							//moveBackward("Straight", 10);
 							}
 							//osDelay(delayOS);
-							memset(aRxBuffer,0,sizeof(aRxBuffer));
+							__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 							osDelay(10);
 							HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 		}else if (strncmp(motorDir, "BL", 2) == 0){
@@ -2457,7 +2468,8 @@ void robotCommand(void const * argument)
 			osDelay(delayOS);
 			moveBackward("Straight", 2);//in lab
 			//osDelay(delayOS);
-			memset(aRxBuffer,0,sizeof(aRxBuffer));
+			__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 			osDelay(10);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
@@ -2474,7 +2486,8 @@ void robotCommand(void const * argument)
 			moveBackward("Straight", 1);//for lab
 			//moveForwardO("Straight", 1);
 			//osDelay(delayOS);
-			memset(aRxBuffer,0,sizeof(aRxBuffer));
+			__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 			osDelay(10);
 			HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
@@ -2502,7 +2515,8 @@ void robotCommand(void const * argument)
 									//osDelay(delayOS);
 									//osDelay(10);
 									motorLeft(angle-6);
-									memset(aRxBuffer,0,sizeof(aRxBuffer));
+									__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 									osDelay(delayOS);
 
 
@@ -2531,7 +2545,8 @@ void robotCommand(void const * argument)
 				//osDelay(delayOS);
 				//osDelay(10);
 				motorRight(angle-8);
-				memset(aRxBuffer,0,sizeof(aRxBuffer));
+				__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 				osDelay(delayOS);
 
 
@@ -2587,7 +2602,8 @@ void robotCommand(void const * argument)
 					rightWallCheck();
 					osDelay(delayOS);
 					*/
-					memset(aRxBuffer,0,sizeof(aRxBuffer));
+					__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 					osDelay(10);
 				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 						}
@@ -2640,7 +2656,8 @@ void robotCommand(void const * argument)
 					leftWallCheck(); //align with 2nd box
 					osDelay(delayOS);
 					*/
-					memset(aRxBuffer,0,sizeof(aRxBuffer));
+					__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 
 					osDelay(10);
 				HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
@@ -2653,7 +2670,8 @@ void robotCommand(void const * argument)
 						osDelay(10);
 												//printf("YOLO");
 						htim1.Instance->CCR4 = 150;
-						memset(aRxBuffer,0,sizeof(aRxBuffer));
+						__HAL_UART_FLUSH_DRREGISTER(&huart3);
+
 						osDelay(delayOS);					//osDelay(1000);
 						HAL_UART_Transmit(&huart3, (uint8_t *) "ACK\r\n", 5, 0xFFFF);
 
